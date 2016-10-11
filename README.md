@@ -5,8 +5,11 @@ Simple n-Sudoku solver using [MiniSAT](http://minisat.se/). This project was mad
 ## Getting Started
 
 First of all, you need these:
+
 1. Linux is preferred. You'll need Linux-alike environment to run this solver in Windows
+
 2. Most recent package-manager
+
 3. At least Java 6 environment is installed
 
 ## Installation
