@@ -1,8 +1,8 @@
 /**
- * @author Syukri Mullia Adil P
+ * @author Syukri Mullia Adil Perkasa
  * @author Martin Novela
  * @author Dhanang Hadhi Sasmita
- * @version 2016.10.11 7.57 PM
+ * @version 2016.10.12 11.49 PM
  *
  */
 
@@ -40,6 +40,13 @@ import java.util.LinkedList;
 
 public class SudokuSolver {
 	// Constants
+	public static String[] compiledOrInstalled = {"Compiled", "Installed"};
+	public static final int MINISAT_INSTALLED = JOptionPane.showOptionDialog(null, "Is your MiniSAT installed or compiled?", 
+		"Choose wisely", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, compiledOrInstalled, compiledOrInstalled[0]);
+	public static final String MINISAT_COMPILED_DIR = "./minisat/core/minisat";
+	public static final String MINISAT_INPUT_FILE_NAME = "input.in";
+	public static final String MINISAT_OUTPUT_FILE_NAME = "output.out";
+
 	public static final int N_SUDOKU = Integer.parseInt(JOptionPane.showInputDialog("Insert Sudoku size (integer): "));
 	public static final int SUDOKU_SIZE = N_SUDOKU * N_SUDOKU;
 
@@ -69,11 +76,6 @@ public class SudokuSolver {
 
 	public static final long NUM_OF_LITERALS = (long) Math.pow(N_SUDOKU, 6);
 	public static final int[][][] LITERALS = new int[SUDOKU_SIZE][SUDOKU_SIZE][SUDOKU_SIZE];
-
-	public static final boolean MINISAT_INSTALLED = false;
-	public static final String MINISAT_COMPILED_DIR = "./minisat/core/minisat";
-	public static final String MINISAT_INPUT_FILE_NAME = "input.in";
-	public static final String MINISAT_OUTPUT_FILE_NAME = "output.out";
 
 	public static HashMap<String,Integer> filledEntries = new HashMap<String,Integer>();
 	public static JButton[][] allEntries = new JButton[SUDOKU_SIZE][SUDOKU_SIZE];
@@ -156,7 +158,8 @@ public class SudokuSolver {
 				class FillEntryButtonListener implements ActionListener {
 					@Override
 					public void actionPerformed(ActionEvent ae) {
-						String entryChosenStr = (String) JOptionPane.showInputDialog(null, "Type \"c\" to clear", "Fill entry with:", JOptionPane.QUESTION_MESSAGE);
+						String entryChosenStr = (String) JOptionPane.showInputDialog(null, "Type \"c\" to clear", "Fill entry", 
+							JOptionPane.QUESTION_MESSAGE);
 						boolean invalid = false;
 						if (entryChosenStr != null) {
 							try {
@@ -166,7 +169,7 @@ public class SudokuSolver {
 								}
 							} catch (Exception e) {
 								if (!entryChosenStr.equals("c")) {
-									JOptionPane.showMessageDialog(null, "Invalid input", "Error", JOptionPane.ERROR_MESSAGE);
+									JOptionPane.showMessageDialog(null, "Invalid input!", "Ouch..", JOptionPane.ERROR_MESSAGE);
 									invalid = true;
 								}
 							}
@@ -176,12 +179,14 @@ public class SudokuSolver {
 							if (entryChosenStr.equals("c")) {
 								entry.setText("");
 								filledEntries.remove(I_FINAL + "," + J_FINAL);
-								System.out.println(I_FINAL + "," + J_FINAL + " -> cleared. " + filledEntries.size() + " of " + SUDOKU_SIZE * SUDOKU_SIZE + " entryies filled out.");
+								System.out.println(I_FINAL + "," + J_FINAL + " cleared. " + filledEntries.size() + " of " + 
+									SUDOKU_SIZE * SUDOKU_SIZE + " entries filled out.");
 							} else {
 								entry.setText(entryChosenStr);	
 								int entryChosen = Integer.parseInt(entryChosenStr);
 								filledEntries.put(I_FINAL + "," + J_FINAL, entryChosen);
-								System.out.println(I_FINAL + "," + J_FINAL + " -> " + entryChosen + ". " + filledEntries.size() + " of " + SUDOKU_SIZE * SUDOKU_SIZE + " entryies filled out.");
+								System.out.println(I_FINAL + "," + J_FINAL + " -> " + entryChosen + ". " + filledEntries.size() + " of " + 
+									SUDOKU_SIZE * SUDOKU_SIZE + " entries filled out.");
 							}	
 						}
 					}
@@ -208,9 +213,9 @@ public class SudokuSolver {
 		class SolveButtonListener implements ActionListener {
 			@Override
 			public void actionPerformed(ActionEvent ae) {
-				// TODO: Solve the Sudoku
+				// Solve the Sudoku
 				if (!solved) {
-					// 1.1: Each field contains at least one digit
+					// 1: Each field contains at least one digit
 					String clauses1 = "";
 					for (int i = 0; i < SUDOKU_SIZE; i++) {
 						for (int j = 0; j < SUDOKU_SIZE; j++) {
@@ -220,12 +225,11 @@ public class SudokuSolver {
 							}
 							clauses1 += clause + "0\n";
 							totalClause++;
-							System.out.print("Clause " + totalClause + ": " + clause);
 						}
 					}
 					allClauses.add(clauses1);
 
-					// 1.2: No field contains two digits
+					// 2: No field contains two digits
 					String clauses2 = "";
 					for (int i = 0; i < SUDOKU_SIZE; i++) {
 						for (int j = 0; j < SUDOKU_SIZE; j++) {
@@ -236,14 +240,14 @@ public class SudokuSolver {
 									String clause = k1Str + " " + k2Str + " 0\n";
 									clauses2 += clause;
 									totalClause++;
-									System.out.print("Clause " + totalClause + ": " + clause);
 								}
 							}
 						}
 					}
+					System.out.println("Clauses for 1st rule have been generated. Total clauses now is " + totalClause);
 					allClauses.add(clauses2);
 
-					// 1.3: Each digit must occur at least once in each row
+					// 3: Each digit must occur at least once in each row
 					String clauses3 = "";
 					for (int i = 0; i < SUDOKU_SIZE; i++) {
 						for (int j = 1; j <= SUDOKU_SIZE; j++) {
@@ -253,12 +257,11 @@ public class SudokuSolver {
 							}
 							clauses3 += clause + "0\n";
 							totalClause++;
-							System.out.print("Clause " + totalClause + ": " + clause);
 						}
 					}
 					allClauses.add(clauses3);
 
-					// 1.4: 1.3 + and not more than once
+					// 4: 3 + and not more than once
 					String clauses4 = "";
 					for (int i = 0; i < SUDOKU_SIZE; i++) {
 						for (int j = 1; j <= SUDOKU_SIZE; j++) {
@@ -269,14 +272,14 @@ public class SudokuSolver {
 									String clause = k1Str + " " + k2Str + " 0\n";
 									clauses4 += clause;
 									totalClause++;
-									System.out.print("Clause " + totalClause + ": " + clause);
 								}
 							}
 						}
 					}
 					allClauses.add(clauses4);
+					System.out.println("Clauses for 2nd rule have been generated. Total clauses now is " + totalClause);
 
-					// 1.5: Each digit must occur at least once in a column
+					// 5: Each digit must occur at least once in a column
 					String clauses5 = "";
 					for (int i = 1; i <= SUDOKU_SIZE * SUDOKU_SIZE; i++) {
 						String clause = "";
@@ -285,11 +288,10 @@ public class SudokuSolver {
 						}
 						clauses5 += clause + "0\n";
 						totalClause++;
-						System.out.print("Clause " + totalClause + ": " + clause);
 					}
 					allClauses.add(clauses5);
 
-					// 1.6: 1.5 + and not more than once
+					// 6: 5 + and not more than once
 					String clauses6 = "";
 					for (int i = 1; i <= SUDOKU_SIZE * SUDOKU_SIZE; i++) {
 						for (int j = 0; j < SUDOKU_SIZE; j++) {
@@ -299,13 +301,13 @@ public class SudokuSolver {
 								String clause = k1Str + " " + k2Str + " 0\n";
 								clauses6 += clause;
 								totalClause++;
-								System.out.print("Clause " + totalClause + ": " + clause);
 							}
 						}
 					}
 					allClauses.add(clauses6);
+					System.out.println("Clauses for 3rd rule have been generated. Total clauses now is " + totalClause);
 
-					// 1.7: Each digit must occur at least once in a subgrid
+					// 7: Each digit must occur at least once in a subgrid
 					String clauses7 = "";
 					for (int i = 0; i < SUDOKU_SIZE; i++) {
 						for (int j = 0; j < SUDOKU_SIZE; j++) {
@@ -317,12 +319,11 @@ public class SudokuSolver {
 							}
 							clauses7 += clause + "0\n";
 							totalClause++;
-							System.out.print("Clause " + totalClause + ": " + clause);
 						}
 					}
 					allClauses.add(clauses7);
 
-					// 1.8: 1.7 + and not more than once
+					// 8: 7 + and not more than once
 					String clauses8 = "";
 					for (int i = 0; i < SUDOKU_SIZE; i++) {
 						for (int j = 0; j < SUDOKU_SIZE; j++) {
@@ -335,12 +336,12 @@ public class SudokuSolver {
 									String clause = "-" + LITERALS[kk1][jj1][i] + " -" + LITERALS[kk2][jj2][i] + " 0\n";
 									clauses8 += clause;
 									totalClause++;
-									System.out.print("Clause " + totalClause + ": " + clause);
 								}
 							}
 						}
 					}
 					allClauses.add(clauses8);
+					System.out.println("Clauses for 4th rule have been generated. Total clauses now is " + totalClause);
 				}
 				solved = true;
 
@@ -354,10 +355,11 @@ public class SudokuSolver {
 					String clause = (SUDOKU_SIZE * SUDOKU_SIZE * row + SUDOKU_SIZE * col + value) + " 0\n";
 					givenClauses += clause;
 					totalClause++;
-					System.out.print("Given clause " + totalClause + ": " + clause);
 				}
-				
+				System.out.println("Clauses for inputted entries have been generated. Total clauses is " + totalClause);
+
 				// To write all clauses to a file input.in
+				System.out.println("Writing clauses to a file...");
 				try {
 					File inputFile = new File(MINISAT_INPUT_FILE_NAME);
 					inputFile.createNewFile();
@@ -375,27 +377,38 @@ public class SudokuSolver {
 				
 
 				// To run minisat and save the output to a file
+				System.out.print("Executing MiniSAT... ");
 				try {
-					if (MINISAT_INSTALLED) {
+					if (MINISAT_INSTALLED == 1) {
 						Process p = Runtime.getRuntime().exec("minisat " + MINISAT_INPUT_FILE_NAME + " " + MINISAT_OUTPUT_FILE_NAME);
 						int exitVal = p.waitFor();
-						System.out.println("Exited with status " + exitVal);	
+						System.out.println("exited with status " + exitVal);	
 					} else {
 						Process p = Runtime.getRuntime().exec(MINISAT_COMPILED_DIR + " " + MINISAT_INPUT_FILE_NAME + " " + MINISAT_OUTPUT_FILE_NAME);
 						int exitVal = p.waitFor();
-						System.out.println("Exited with status " + exitVal);
+						System.out.println("exited with status " + exitVal);
 					}					
+				} catch (IOException e) {
+					if (MINISAT_INSTALLED == 1) {
+						JOptionPane.showMessageDialog(null, "Your MiniSAT is not installed.\n" + 
+							"Please read the documentation PDF and restart!", "Ouch..", JOptionPane.WARNING_MESSAGE);
+					} else {
+						JOptionPane.showMessageDialog(null, 
+							"Your MiniSAT is not compiled or in the wrong directory.\n" + 
+							"Please read the documentation PDF and restart!", "Ouch..", JOptionPane.WARNING_MESSAGE);
+					}
+					System.exit(0);
 				} catch (Exception e) {
-					e.printStackTrace();
+					JOptionPane.showMessageDialog(null, "An error occured.", "Ouch..", JOptionPane.WARNING_MESSAGE);
 				}
 
 				// To read the output file and process it
+				System.out.println("Processing MiniSAT results...");
 				try {
 					File outputFile = new File(MINISAT_OUTPUT_FILE_NAME);
 
 					BufferedReader br = new BufferedReader(new FileReader(outputFile));
-					String satisfiability = br.readLine();
-					if (satisfiability.equals("SAT")) {
+					if (br.readLine().equals("SAT")) {
 						String[] results = br.readLine().split(" ");
 						for (String res : results) {
 							if (res.charAt(0) == '0') {
